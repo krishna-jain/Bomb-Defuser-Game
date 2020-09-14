@@ -5,7 +5,7 @@ using namespace std;
 //***********  BOMB DEFUSER  **********
 
 int R, C, BOMBS;
-time_t start_time = time(NULL);
+time_t start_time = time(NULL);  // Time starts
 
 bool isValid(int row, int col) // Check for out of range cells
 {
@@ -33,7 +33,7 @@ void takeInput(int &row, int &col) // Take input from user to play the game
     if(c >= 'A' && c <= 'Z')
     {
         {
-            c = c - 'A' + 'a';
+            c = c - 'A' + 'a';    // coverts uppercase to lowercase
         }
     }
     col = c - 'a';
@@ -44,7 +44,7 @@ void showBoard(vector<vector<char>> &userBoard) // Display the current progress 
     int row = userBoard.size();
     int col = userBoard[0].size();
 
-        // Using ascii characters - draw box around it and bomb is char(225) and hidden is char(219)
+        // Using Ascii characters to draw a box, display bomb (is char(225)) and hide the contents (is char(219))
     int remark = rand()%7;
 
     switch(remark)
@@ -92,7 +92,7 @@ void showBoard(vector<vector<char>> &userBoard) // Display the current progress 
 
 }
 
-int countBombs(int row, int col, vector<vector<char>> &bombs, vector<vector<char>> &ansBoard) // Counts total number of bombs in neighbouring cells
+int countBombs(int row, int col, vector<vector<char>> &bombs, vector<vector<char>> &ansBoard) // Counts total number of bombs in neighboring cells
 {
     int count = 0;
     if(isValid(row-1, col-1))
@@ -156,14 +156,13 @@ bool playGame(vector<vector<char>> &userBoard, vector<vector<char>> &ansBoard, v
         cout << "\n\n\t\t\t\t\t YOU LOST, BETTER LUCK NEXT TIME :)\n\n";
         return false;
     }
-    else
+    else // Stepped on a safe spot
     {
-        int count = countBombs(row, col, bombs, ansBoard);
-        movesLeft--;
-
+        int count = countBombs(row, col, bombs, ansBoard); // number of bombs surrounding the current block
+   
         userBoard[row][col] = char(count+'0');
 
-        if(count == 0)
+        if(count == 0) // recursively display all the blocks if no bomb nearby
         {
             if(isValid(row-1, col-1))
             {
@@ -202,14 +201,13 @@ bool playGame(vector<vector<char>> &userBoard, vector<vector<char>> &ansBoard, v
     }
 }
 
-void setBombs(int row, int col, vector<vector<char>> &bombs, vector<vector<char>> &ansBoard)
+void setBombs(int row, int col, vector<vector<char>> &bombs, vector<vector<char>> &ansBoard) // Randomly places bombs in the start of the game
 {
-    set<pair<int,int>>check;
+    set<pair<int,int>> check;
     for(int i = 0; i < BOMBS;)
     {
         int x = rand() % row;
         int y = rand() % col;
-       // cout << x << " " << y;
         if(check.find({x,y}) == check.end())
         {
             bombs[i][0] = x;
@@ -221,7 +219,7 @@ void setBombs(int row, int col, vector<vector<char>> &bombs, vector<vector<char>
     }
 }
 
-void initialise(int row, int col, vector<vector<char>> &ansBoard, vector<vector<char>> &userBoard)
+void initialise(int row, int col, vector<vector<char>> &ansBoard, vector<vector<char>> &userBoard) // hides all the blocks before the start of game
 {
     srand(time(NULL));
     for(int i = 0; i < row; i++)
@@ -235,7 +233,7 @@ void initialise(int row, int col, vector<vector<char>> &ansBoard, vector<vector<
 }
 
 
-void replaceBomb(int row, int col, vector<vector<char>> &ansBoard)
+void replaceBomb(int row, int col, vector<vector<char>> &ansBoard) // bomb is replaced if stepped on the bomb in the very first move
 {
     bool found = false;
     int x, y;
@@ -249,10 +247,8 @@ void replaceBomb(int row, int col, vector<vector<char>> &ansBoard)
             ansBoard[x][y] = char(225);
             found = true;
         }
-
     }
     ansBoard[row][col] = char(219);
-
 }
 
 void play(int row, int col)
@@ -262,7 +258,7 @@ void play(int row, int col)
     vector<vector<char>> ansBoard(row, vector<char> (col));
     vector<vector<char>> userBoard(row, vector<char> (col));
 
-    int movesLeft = row*col - BOMBS;
+    int movesLeft = BOMBS;
     vector<vector<char>> bombs(BOMBS, vector<char> (2));
     initialise(row, col, ansBoard, userBoard);
 
@@ -271,25 +267,54 @@ void play(int row, int col)
     while(isPlaying)
     {
         time_t end_time = time(NULL);
-    int diff = difftime(end_time, start_time);
-
+        int diff = difftime(end_time, start_time);
         cout << "Current Progress in finding the bombs: \n";
         showBoard(userBoard);
-cout << "Playing time: ";
-if(diff/60 == 1)
-{
-    cout << "1 minute ";
-}
-else if(diff/60>1)
-{
-    cout << diff/60 << " minutes";
-}
-cout << diff%60  << " seconds"<< "\n";
-        do{
-            takeInput(row,col);
-            cout << "\nEnter a valid input\n\n";
+        cout << "Playing time: ";
+        if(diff/60 == 1)
+        {
+            cout << "1 minute ";
+        }
+        else if(diff/60>1)
+        {
+            cout << diff/60 << " minutes "; // Show Time Elapsed in the game so far
+        }
+        cout << diff%60  << " seconds"<< "\n";
+
+        char chose;
+        do{     // check for invalid input
+             cout << "Press 'r' to reveal a box and 'd' to defuse a bomb \n";
+             cin >> chose;
+
+             if(chose != 'r' && chose && 'R' && chose != 'd' && chose != 'D')
+                continue;
+             takeInput(row,col);
         }
         while(row >= R || col >= C);
+
+        if(chose == 'd' || chose == 'D')
+        {
+            if(ansBoard[row][col] == char(225))
+            {
+                cout << "\n\t\t\t\t\t\tA BOMB WAS SUCCESSFULLY DEFUSED!\n";
+                movesLeft--;
+                userBoard[row][col] = char(225);
+                if(movesLeft != 0)
+                continue;
+            }
+            else
+            {
+                for(int i = 0; i < BOMBS; i++)
+                {
+                    userBoard[bombs[i][0]][bombs[i][1]] = char(225);
+                }
+                showBoard(userBoard);
+                cout << "THERE WAS NO BOMB TO DEFUSE THERE\n";
+                cout << "\n\n\t\t\t\t\t YOU LOST, BETTER LUCK NEXT TIME :)\n\n";
+                isPlaying = false;
+                continue;
+            }
+        }
 
         if(firstMove)
         {
@@ -301,16 +326,16 @@ cout << diff%60  << " seconds"<< "\n";
         }
         firstMove = false;
 
+        if(movesLeft != 0)
         isPlaying = playGame(userBoard, ansBoard, bombs, row, col, movesLeft);
+
         if(isPlaying == true && movesLeft == 0)
         {
             showBoard(userBoard);
-            cout << "\n\n CONGRATS, YOU WON! \n\n";
+            cout << "\n\n CONGRATS, YOU DEFUSED ALL THE BOMBS! YOU WON! \n\n";
             isPlaying = false;
         }
-
     }
-
 }
 void selectDifficulty()
 {
@@ -339,25 +364,25 @@ void selectDifficulty()
     {
         R = 7;
         C = 7;
-        BOMBS = 8;
+        BOMBS = 7;
     }
     else if(diff == 1)
     {
         R = 11;
         C = 11;
-        BOMBS = 19;
+        BOMBS = 18;
     }
     else if(diff == 2)
     {
         R = 18;
         C = 18;
-        BOMBS = 50;
+        BOMBS = 48;
     }
     else if(diff == 3)
     {
         R = 26;
         C = 26;
-        BOMBS = 100;
+        BOMBS = 97;
     }
     else if(diff == 4)
     {
@@ -374,8 +399,6 @@ void selectDifficulty()
         cout << "\nOops! Invalid Number, Please try again\n\n";
         selectDifficulty();
     }
-
-
 }
 
 int main()
@@ -404,5 +427,3 @@ int main()
 
     return 0;
 }
-
-
